@@ -35,7 +35,7 @@ You can copy CSS SELECTOR to clipboard easily by right-click on the target eleme
 [https://github.com/ssugiya/Spreadsheetnium/releases](https://github.com/ssugiya/Spreadsheetnium/releases)
 
 
-### 6. Read "how to use Spreadsheetnium"
+### 6. Read also "how to use Spreadsheetnium"
 
 [How to use Spreadsheetnium](./howToUseSpreadsheetnium.md)
 
