@@ -25,5 +25,6 @@ Spreadsheetniumを使用するには以下softwareが必要です。
 - [How to use Spreadsheetnium](./howToUseSpreadsheetnium.md)
 
 (translate)
-- [設定方法](./howToSetupSpreadsheetnium.md)
-- [使用方法](./howToUseSpreadsheetnium.md)
+
+- [Spreadsheetnium設定方法](./howToSetupSpreadsheetnium.md)
+- [Spreadsheetnium使用方法](./howToUseSpreadsheetnium.md)

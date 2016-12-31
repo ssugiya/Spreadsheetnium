@@ -1,4 +1,4 @@
-##How to setup Spreadsheetnium
+## How to setup Spreadsheetnium
 
 ### 1. Download and install SeleniumBasic
 [https://github.com/florentbr/SeleniumBasic/releases/latest](https://github.com/florentbr/SeleniumBasic/releases/latest)
@@ -32,8 +32,8 @@ You can copy CSS SELECTOR to clipboard easily by right-click on the target eleme
 
 ### 5. Download Spreadsheetnium
 
-[https://github.com/ssugiya/testrepo/releases](https://github.com/ssugiya/testrepo/releases)
-[spreadsheetnium.png](./img/spreadsheetnium.png "SeleniumBasic")
+[https://github.com/ssugiya/Spreadsheetnium/releases](https://github.com/ssugiya/Spreadsheetnium/releases)
+
 
 ### 6. Read "how to use Spreadsheetnium"
 
