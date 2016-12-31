@@ -10,6 +10,7 @@ Spreadsheetniumは、難しいJavaのIDE設定や単体試験frameworkを使う�
 
 (translate)
 Spreadsheetniumを使用するには以下softwareが必要です。
+
 - [Microsoft Excel2010 or later](https://products.office.com/excel)
 - [SeleniumBasic](https://florentbr.github.io/SeleniumBasic/)
 - [chromedriver](https://sites.google.com/a/chromium.org/chromedriver/)
