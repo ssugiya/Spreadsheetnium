@@ -61,19 +61,19 @@ Spreadsheetniumを未Downloadな場合は、以下を参照してください。
 (transration)
 
 - Browser
- - 使用するWEB Browserを選択します
- - FirefoxはWebdriverの制限上、46.0.1でのみ動作します。自動更新設定をOFFにして利用してください
- - PhantomJSはHeadless browserなので画面表示は無いです
+    - 使用するWEB Browserを選択します
+    - FirefoxはWebdriverの制限上、46.0.1でのみ動作します。自動更新設定をOFFにして利用してください
+    - PhantomJSはHeadless browserなので画面表示は無いです
 - Baseurl
- - 試験対象のdomain名を記載します
+    - 試験対象のdomain名を記載します
 - Window width, height
- - Browserの縦・横pixcelを設定します
+    - Browserの縦・横pixcelを設定します
 -  Screenshot
- - 試験中の画面写真を保存する場所を指定します。
- - 空欄の場合は写真は非撮影です
- - 写真名は、[scriptID]\_[HTML Title]\_[Description]\_[Result].pngで保存されます
+    - 試験中の画面写真を保存する場所を指定します。
+    - 空欄の場合は写真は非撮影です
+    - 写真名は、[scriptID]\_[HTML Title]\_[Description]\_[Result].pngで保存されます
 - Delete cookie
- - 試験開始時にCookieを削除する場合は[Yes]にします
+    - 試験開始時にCookieを削除する場合は[Yes]にします
 
 #### Write test script
 
