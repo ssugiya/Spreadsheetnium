@@ -16,6 +16,8 @@ Else
     Call runScript
 End If
 
+Call reportResults
+
 End Sub
 
 Private Sub runScript()
@@ -418,6 +420,7 @@ For Each R In LS.ListRows
     DoEvents
 Next R
 
+ActiveSheet.TextBoxes(1).Text = ""
 Application.StatusBar = "Ready to run."
 
 End Sub
@@ -466,7 +469,7 @@ Next i
 
 For i = 1 To Sheets.Count
     Select Case Sheets(Sheets(i).Name).Name
-        Case "BATCH_RUN", "LISTBOX_DATA", "CheckForUpdates"
+        Case "BATCH_RUN", "LISTBOX_DATA", "CheckForUpdates", "REPORT_RESULTS"
             'ignore this sheet
         Case Else
             'copy sheet name to listobject
@@ -491,6 +494,8 @@ If MsgBox("Do you want to batch run test script?", vbOKCancel + vbExclamation + 
 Else
     Call batchRunScript
 End If
+
+'Call reportResults
 
 End Sub
 Private Sub batchRunScript()
@@ -527,5 +532,39 @@ nextR:
 Next R
 
 Call collectTestResults
+
+End Sub
+
+Public Sub reportResults()
+Dim testResults As String
+Dim LS As ListObject
+Dim rowNum As Long
+Dim testTargetSheet  As Worksheet
+
+'collect test relusts
+testResults = ""
+testResults = testResults & "Test title : " & Range("testTitle").Text & vbCrLf
+testResults = testResults & "sheet name : " & ActiveSheet.Name & vbCrLf & vbCrLf
+
+testResults = testResults & "Not tested : " & Range("NotTested").Text & vbCrLf
+testResults = testResults & "Passed : " & Range("Passed").Text & vbCrLf
+testResults = testResults & "Failed: " & Range("Failed").Text & vbCrLf
+testResults = testResults & "Skipped : " & Range("Skipped").Text & vbCrLf
+testResults = testResults & "Total : " & Range("Total").Text & vbCrLf
+testResults = testResults & "Progress rate : " & Range("Progressrate").Text & vbCrLf & vbCrLf
+
+testResults = testResults & ActiveSheet.TextBoxes(1).Text & vbCrLf & vbCrLf
+
+'activate report sheet
+Set testTargetSheet = Worksheets("REPORT_RESULTS")
+testTargetSheet.Activate
+
+'copy results to report sheet
+Set LS = ActiveSheet.ListObjects(1)
+rowNum = Range("TestScript").Row + 3
+Cells(rowNum, LS.ListColumns("Description").Index) = testResults
+
+'run report script
+Call runScript
 
 End Sub
