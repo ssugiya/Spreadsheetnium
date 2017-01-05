@@ -32,8 +32,8 @@ Dim by As New by
     On Error GoTo Err
 #End If
 
-
 Application.StatusBar = "Test script is initializing."
+ActiveSheet.TextBoxes(1).Text = ""
 
 '==========================================
 'Initial settings
@@ -215,7 +215,9 @@ Exit Sub
 
 '----------------------------
 Err:
-    R.Range(LS.ListColumns("ErrorMessage").Index) = Now() & vbCrLf & "Err number: " & Err.Number & vbCrLf & Err.Description
+    
+    Debug.Print Now() & vbCrLf & "Err number: " & Err.Number & vbCrLf & Err.Description
+    ActiveSheet.TextBoxes(1).Text = Now() & vbCrLf & "Err number: " & Err.Number & vbCrLf & Err.Description
     Application.StatusBar = "Test script finished unexpected"
 
     Call exitProgram
