@@ -435,7 +435,7 @@ rowNum = Range("ResultsSummary").Row + 2
 
 For i = 1 To Sheets.Count
     Select Case Sheets(Sheets(i).Name).Name
-        Case "BATCH_RUN", "LISTBOX_DATA", "CheckForUpdates"
+        Case "BATCH_RUN", "LISTBOX_DATA", "CheckForUpdates", "REPORT_RESULTS"
             'ignore this sheet
         Case Else
             'copy sheet name to listobject
