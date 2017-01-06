@@ -3,11 +3,37 @@ Option Explicit
 
 #Const DBG = 0
 
+Private Declare Function MessageBoxTimeoutA Lib "user32" (ByVal hWnd As Long, ByVal lpText As String, ByVal lpCaption As String, ByVal uType As Long, ByVal wLanguageId As Long, ByVal dwMilliseconds As Long) As Long
 Public driver As New WebDriver
 Public Verify As New Selenium.Verify
 Public Const findElementTimeOut As Long = 3000
 Public Const passedColorCode As Long = 11854022 'RGB(198, 224, 180)
 Public Const failedColorCode As Long = 11389944 'RGB(248, 203, 173)
+
+Private Sub Auto_Open()
+
+Dim AutorunFlg As String
+Dim testTargetSheet  As Worksheet
+
+Set testTargetSheet = Worksheets("RUN_BATCH")
+testTargetSheet.Activate
+AutorunFlg = "No"
+If Cells(1.1) = "Spreadsheetnium Batch processing sheet" Then
+    AutorunFlg = "Yes"
+End If
+
+If AutorunFlg = "Yes" Then
+    If MessageBoxTimeoutA(0&, "We will start the automatic batch test in 5 seconds", "Answer within 5 seconds!", vbMsgBoxSetForeground + vbQuestion + vbOKCancel + vbDefaultButton2, 0, 5000) = vbCancel Then
+        Exit Sub
+    Else
+        Call batchRunScript
+        ActiveWorkbook.Save
+        Application.Quit
+    End If
+End If
+
+End Sub
+
 Public Sub runTestScript()
 
 If MsgBox("Do you want to run test script?", vbOKCancel + vbExclamation + vbDefaultButton2, "Run test script") = vbCancel Then
@@ -16,7 +42,9 @@ Else
     Call runScript
 End If
 
-Call reportResults
+If Range("ReportResults").Text = "Yes" Then
+    Call reportResults
+End If
 
 End Sub
 
@@ -34,7 +62,7 @@ Dim by As New by
     On Error GoTo Err
 #End If
 
-Application.StatusBar = "Test script is initializing."
+Application.StatusBar = "Initializing."
 ActiveSheet.TextBoxes(1).Text = ""
 
 '==========================================
@@ -45,9 +73,6 @@ baseURL = Range("baseURL").Text
 windowSizeW = Range("windowSizeW").Text
 windowSizeH = Range("windowSizeH").Text
 screenshotPath = Range("ScreenshotPath").Text
-'[TODO] Select Browser Profile?
-'[TOTO] HTTP Header?
-'[TODO] Install Browser plag-in
 
 '==========================================
 'Start test
@@ -169,7 +194,7 @@ For Each R In LS.ListRows
             Rtn = Verify.Matches(R.Range(LS.ListColumns("ExpectedResult").Index).Text, R.Range(LS.ListColumns("ActualResult").Index).Text)
     End Select
 
-    'test results
+    'decide test results
     If Rtn = "OK" Then
         R.Range(LS.ListColumns("Result").Index) = "Passed"
         R.Range(LS.ListColumns("Result").Index).Interior.Color = passedColorCode
@@ -242,7 +267,6 @@ driver.Quit
 ActiveWorkbook.Save
 
 End Sub
-
 
 Private Function commandClick(findMethod, actionTarget As String, R As ListRow, LS As ListObject)
 
@@ -435,7 +459,7 @@ rowNum = Range("ResultsSummary").Row + 2
 
 For i = 1 To Sheets.Count
     Select Case Sheets(Sheets(i).Name).Name
-        Case "BATCH_RUN", "LISTBOX_DATA", "CheckForUpdates", "REPORT_RESULTS"
+        Case "RUN_BATCH", "LISTBOX_DATA", "CheckForUpdates", "REPORT_RESULTS"
             'ignore this sheet
         Case Else
             'copy sheet name to listobject
@@ -469,7 +493,7 @@ Next i
 
 For i = 1 To Sheets.Count
     Select Case Sheets(Sheets(i).Name).Name
-        Case "BATCH_RUN", "LISTBOX_DATA", "CheckForUpdates", "REPORT_RESULTS"
+        Case "RUN_BATCH", "LISTBOX_DATA", "CheckForUpdates", "REPORT_RESULTS"
             'ignore this sheet
         Case Else
             'copy sheet name to listobject
@@ -522,7 +546,11 @@ For Each R In LS.ListRows
     
     Call runScript
     
-    Set testTargetSheet = Worksheets("BATCH_RUN")
+    If Range("ReportResults").Text = "Yes" Then
+        Call reportResults
+    End If
+    
+    Set testTargetSheet = Worksheets("RUN_BATCH")
     testTargetSheet.Activate
     Cells(rowNum, LS.ListColumns("Status").Index) = "Finished"
     Cells(rowNum, LS.ListColumns("Lastupdate").Index) = Now()
@@ -568,3 +596,4 @@ Cells(rowNum, LS.ListColumns("Description").Index) = testResults
 Call runScript
 
 End Sub
+
