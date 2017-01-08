@@ -6,9 +6,11 @@ Option Explicit
 Private Declare Function MessageBoxTimeoutA Lib "user32" (ByVal hWnd As Long, ByVal lpText As String, ByVal lpCaption As String, ByVal uType As Long, ByVal wLanguageId As Long, ByVal dwMilliseconds As Long) As Long
 Public driver As New WebDriver
 Public Verify As New Selenium.Verify
-Public Const findElementTimeOut As Long = 3000
+Public Const findElementTimeOut As Long = 0 '3000
 Public Const passedColorCode As Long = 11854022 'RGB(198, 224, 180)
 Public Const failedColorCode As Long = 11389944 'RGB(248, 203, 173)
+Public Rtn
+
 
 Private Sub Auto_Open()
 
@@ -34,27 +36,38 @@ Private Sub Auto_Open()
     Exit Sub
         
 Err: '----------------------------
-    Call errHandler("Auto_Open")
+    Rtn = errHandler("Auto_Open", Err.Number)
+    If Rtn = 0 Then
+        Resume Next
+    Else
+        Call exitProgram
+    End If
+
 
 End Sub
-Private Function errHandler(procName As String)
+Private Function errHandler(procName As String, ErrNumber As Long)
 
     Dim errMsg As String
     
-    errMsg = Now() & vbCrLf & _
-            "Procedure: " & procName & vbCrLf & _
-            "Err number: " & Err.Number & vbCrLf & _
-            Err.Description
-    
-    #If DBG = 0 Then
-        Debug.Print errMsg & vbCrLf & vbCrLf
-    #End If
-    'ActiveSheet.TextBoxes(1).Text = ActiveSheet.TextBoxes(1).Text & vbCrLf & vbCrLf & errMsg
-    Cells(9, 12).Value = Cells(9, 12).Value & errMsg & vbCrLf & vbCrLf
+    Select Case ErrNumber
+        Case 26 'unexpected alert open(Resume Next)
+            errHandler = 0
+        Case -2146233078 'ソースが見つかりませんでしたが､いくつかまたはすべてのログを検索できませんでした｡アクセス不可能なログ:   Security
+            errHandler = 0
+        Case Else
+            errHandler = -1
+            errMsg = Now() & vbCrLf & _
+                    "Procedure: " & procName & vbCrLf & _
+                    "Err number: " & Err.Number & vbCrLf & _
+                    Err.Description
+        
+        #If DBG <> 0 Then
+            Debug.Print errMsg & vbCrLf & vbCrLf
+        #End If
+        Cells(9, 12).Value = Cells(9, 12).Value & errMsg & vbCrLf & vbCrLf
 
-    #If DBG = 0 Then
-        Call exitProgram
-    #End If
+    End Select
+   
 
 End Function
 Public Sub runTestScriptConfirm()
@@ -77,7 +90,12 @@ Public Sub runTestScriptConfirm()
     Exit Sub
 
 Err: '----------------------------
-    Call errHandler("runTestScriptConfirm")
+    Rtn = errHandler("runTestScriptConfirm", Err.Number)
+    If Rtn = 0 Then
+        Resume Next
+    Else
+        Call exitProgram
+    End If
 
 End Sub
 
@@ -86,7 +104,7 @@ Private Sub runScript()
     Dim command As String, findMethod As String, actionTarget As String, actionValue As String
     Dim targetBrowser As String, baseURL As String, windowSizeW, windowSizeH As Integer, screenshotPath As String, screenshotFile As String
     Dim verificationCommand As String, verificationMethod As String, verificationTarget As String
-    Dim rtn
+    Dim Rtn
     Dim LS As ListObject
     Dim R As ListRow
     Dim by As New by
@@ -96,7 +114,6 @@ Private Sub runScript()
     #End If
     
     Application.StatusBar = "Initializing."
-    'ActiveSheet.TextBoxes(1).Text = ""
     Cells(9, 12).Value = ""
     Call clearTestResults
     
@@ -143,11 +160,11 @@ Private Sub runScript()
             Case "Get"
                 driver.Get actionTarget
             Case "Click"
-                rtn = commandClick(findMethod, actionTarget, R, LS)
-                If rtn = -1 Then: GoTo nextRowNum
+                Rtn = commandClick(findMethod, actionTarget, R, LS)
+                If Rtn = -1 Then: GoTo nextRowNum
             Case "SendKeys"
-                rtn = commandSendKeys(findMethod, actionTarget, actionValue, R, LS)
-                If rtn = -1 Then: GoTo nextRowNum
+                Rtn = commandSendKeys(findMethod, actionTarget, actionValue, R, LS)
+                If Rtn = -1 Then: GoTo nextRowNum
             Case "TakeScreenshot"
                 driver.TakeScreenshot.SaveAs actionTarget & "\" & actionValue
             Case "Wait"
@@ -156,20 +173,23 @@ Private Sub runScript()
                 driver.GoBack
                 driver.Wait findElementTimeOut
             Case "Select"
-                rtn = commandSelect(findMethod, actionTarget, actionValue, R, LS)
-                If rtn = -1 Then: GoTo nextRowNum
+                Rtn = commandSelect(findMethod, actionTarget, actionValue, R, LS)
+                If Rtn = -1 Then: GoTo nextRowNum
             Case "Radio"
-                rtn = commandRadio(findMethod, actionTarget, actionValue, R, LS)
-                If rtn = -1 Then: GoTo nextRowNum
+                Rtn = commandRadio(findMethod, actionTarget, actionValue, R, LS)
+                If Rtn = -1 Then: GoTo nextRowNum
             Case "MouseMoveTo"
-                rtn = commandMouseMoveTo(findMethod, actionTarget, R, LS)
-                If rtn = -1 Then: GoTo nextRowNum
+                Rtn = commandMouseMoveTo(findMethod, actionTarget, R, LS)
+                If Rtn = -1 Then: GoTo nextRowNum
             Case "Submit"
-                rtn = commandSubmit(findMethod, actionTarget, R, LS)
-                If rtn = -1 Then: GoTo nextRowNum
+                Rtn = commandSubmit(findMethod, actionTarget, R, LS)
+                If Rtn = -1 Then: GoTo nextRowNum
             Case "Alert"
-                rtn = commandAlert(findMethod, actionTarget, actionValue, R, LS)
-                If rtn = -1 Then: GoTo nextRowNum
+                Rtn = commandAlert(findMethod, actionTarget, actionValue, R, LS)
+                If Rtn = -1 Then: GoTo nextRowNum
+            Case "SwitchToWindow"
+                driver.SwitchToWindowByTitle(actionTarget).Activate
+                driver.Wait findElementTimeOut
             Case Else
         
         End Select
@@ -181,7 +201,7 @@ Private Sub runScript()
         verificationCommand = R.Range(LS.ListColumns("VerificationCommand").Index)
         verificationMethod = R.Range(LS.ListColumns("VerificationMethod").Index)
         verificationTarget = R.Range(LS.ListColumns("VerificationTarget").Index)
-        rtn = ""
+        Rtn = ""
         
         If verificationCommand = "" Then
             Call skipTest(R, LS, "Skipped (No verification command)")
@@ -222,18 +242,18 @@ Private Sub runScript()
         'verify results
         Select Case verificationCommand
             Case "Contains"
-                rtn = Verify.Contains(R.Range(LS.ListColumns("ExpectedResult").Index).Text, R.Range(LS.ListColumns("ActualResult").Index).Text)
+                Rtn = Verify.Contains(R.Range(LS.ListColumns("ExpectedResult").Index).Text, R.Range(LS.ListColumns("ActualResult").Index).Text)
             Case "Equals"
-                rtn = Verify.Equals(R.Range(LS.ListColumns("ExpectedResult").Index).Text, R.Range(LS.ListColumns("ActualResult").Index).Text)
+                Rtn = Verify.Equals(R.Range(LS.ListColumns("ExpectedResult").Index).Text, R.Range(LS.ListColumns("ActualResult").Index).Text)
             Case "Matches" 'regular expression
-                rtn = Verify.Matches(R.Range(LS.ListColumns("ExpectedResult").Index).Text, R.Range(LS.ListColumns("ActualResult").Index).Text)
+                Rtn = Verify.Matches(R.Range(LS.ListColumns("ExpectedResult").Index).Text, R.Range(LS.ListColumns("ActualResult").Index).Text)
         End Select
     
         'decide test results
-        If rtn = "OK" Then
+        If Rtn = "OK" Then
             R.Range(LS.ListColumns("Result").Index) = "Passed"
             R.Range(LS.ListColumns("Result").Index).Interior.Color = passedColorCode
-        ElseIf rtn Like "NOK*" Then
+        ElseIf Rtn Like "NOK*" Then
             R.Range(LS.ListColumns("Result").Index) = "Failed"
             R.Range(LS.ListColumns("Result").Index).Interior.Color = failedColorCode
         ElseIf R.Range(LS.ListColumns("ActualResult").Index).Text = R.Range(LS.ListColumns("ExpectedResult").Index).Text Then
@@ -276,8 +296,14 @@ nextRowNum:
     Exit Sub
 
 Err: '----------------------------
-    Call errHandler("runScript")
 
+Rtn = errHandler("runScript", Err.Number)
+If Rtn = 0 Then
+    Resume Next
+Else
+    Call exitProgram
+End If
+    
 End Sub
 
 Private Sub skipTest(R As ListRow, LS As ListObject, msg As String)
@@ -294,7 +320,12 @@ Private Sub skipTest(R As ListRow, LS As ListObject, msg As String)
     Exit Sub
 
 Err: '----------------------------
-    Call errHandler("skipTest")
+    Rtn = errHandler("skipTest", Err.Number)
+    If Rtn = 0 Then
+        Resume Next
+    Else
+        Call exitProgram
+    End If
 
 End Sub
 
@@ -310,7 +341,12 @@ Private Sub exitProgram()
     Exit Sub
 
 Err: '----------------------------
-    Call errHandler("exitProgram")
+    Rtn = errHandler("exitProgram", Err.Number)
+    If Rtn = 0 Then
+        Resume Next
+    Else
+        Call exitProgram
+    End If
 
 End Sub
 
@@ -344,7 +380,12 @@ Private Function commandClick(findMethod, actionTarget As String, R As ListRow, 
     Exit Function
 
 Err: '----------------------------
-    Call errHandler("commandClick")
+    Rtn = errHandler("commandClick", Err.Number)
+    If Rtn = 0 Then
+        Resume Next
+    Else
+        Call exitProgram
+    End If
 
 End Function
 
@@ -374,7 +415,12 @@ Private Function commandSubmit(findMethod, actionTarget As String, R As ListRow,
     Exit Function
 
 Err: '----------------------------
-    Call errHandler("commandSubmit")
+    Rtn = errHandler("commandSubmit", Err.Number)
+    If Rtn = 0 Then
+        Resume Next
+    Else
+        Call exitProgram
+    End If
 
 End Function
 
@@ -417,7 +463,12 @@ Private Function commandSendKeys(findMethod As String, actionTarget As String, a
     Exit Function
 
 Err: '----------------------------
-    Call errHandler("commandSendKeys")
+    Rtn = errHandler("commandSendKeys", Err.Number)
+    If Rtn = 0 Then
+        Resume Next
+    Else
+        Call exitProgram
+    End If
 
 End Function
 
@@ -444,7 +495,12 @@ Private Function commandSelect(findMethod As String, actionTarget As String, act
     Exit Function
 
 Err: '----------------------------
-    Call errHandler("commandSelect")
+    Rtn = errHandler("commandSelect", Err.Number)
+    If Rtn = 0 Then
+        Resume Next
+    Else
+        Call exitProgram
+    End If
 
 End Function
 
@@ -471,7 +527,12 @@ Private Function commandRadio(findMethod As String, actionTarget As String, acti
     Exit Function
 
 Err: '----------------------------
-    Call errHandler("commandRadio")
+    Rtn = errHandler("commandRadio", Err.Number)
+    If Rtn = 0 Then
+        Resume Next
+    Else
+        Call exitProgram
+    End If
 
 End Function
 
@@ -496,7 +557,12 @@ Private Function commandAlert(findMethod As String, actionTarget As String, acti
     Exit Function
 
 Err: '----------------------------
-    Call errHandler("commandAlert")
+    Rtn = errHandler("commandAlert", Err.Number)
+    If Rtn = 0 Then
+        Resume Next
+    Else
+        Call exitProgram
+    End If
 
 End Function
 
@@ -527,7 +593,12 @@ Private Function commandMouseMoveTo(findMethod As String, actionTarget As String
     Exit Function
 
 Err: '----------------------------
-    Call errHandler("commandMouseMoveTo")
+    Rtn = errHandler("commandMouseMoveTo", Err.Number)
+    If Rtn = 0 Then
+        Resume Next
+    Else
+        Call exitProgram
+    End If
 
 End Function
 
@@ -546,7 +617,12 @@ Public Sub clearTestResultsConfirm()
     Exit Sub
 
 Err: '----------------------------
-    Call errHandler("clearTestResultsConfirm")
+    Rtn = errHandler("clearTestResultsConfirm", Err.Number)
+    If Rtn = 0 Then
+        Resume Next
+    Else
+        Call exitProgram
+    End If
 
 End Sub
 Private Sub clearTestResults()
@@ -576,7 +652,12 @@ Private Sub clearTestResults()
     Exit Sub
 
 Err: '----------------------------
-    Call errHandler("clearTestResults")
+    Rtn = errHandler("clearTestResults", Err.Number)
+    If Rtn = 0 Then
+        Resume Next
+    Else
+        Call exitProgram
+    End If
 
 End Sub
 Private Sub collectTestResults()
@@ -613,7 +694,12 @@ Private Sub collectTestResults()
     Exit Sub
 
 Err: '----------------------------
-    Call errHandler("collectTestResults")
+    Rtn = errHandler("collectTestResults", Err.Number)
+    If Rtn = 0 Then
+        Resume Next
+    Else
+        Call exitProgram
+    End If
 
 End Sub
 Public Sub prepTestTarget()
@@ -655,7 +741,12 @@ Public Sub prepTestTarget()
     Exit Sub
 
 Err: '----------------------------
-    Call errHandler("prepTestTarget")
+    Rtn = errHandler("prepTestTarget", Err.Number)
+    If Rtn = 0 Then
+        Resume Next
+    Else
+        Call exitProgram
+    End If
 
 End Sub
 Public Sub batchRunTestScriptConfirm()
@@ -674,7 +765,12 @@ Public Sub batchRunTestScriptConfirm()
     Exit Sub
 
 Err: '----------------------------
-    Call errHandler("batchRunTestScriptConfirm")
+    Rtn = errHandler("batchRunTestScriptConfirm", Err.Number)
+    If Rtn = 0 Then
+        Resume Next
+    Else
+        Call exitProgram
+    End If
 
 End Sub
 Private Sub batchRunScript()
@@ -734,7 +830,12 @@ nextR:
     Exit Sub
 
 Err: '----------------------------
-    Call errHandler("batchRunScript")
+    Rtn = errHandler("batchRunScript", Err.Number)
+    If Rtn = 0 Then
+        Resume Next
+    Else
+        Call exitProgram
+    End If
     
 End Sub
 
@@ -797,7 +898,12 @@ Public Sub reportResults()
     Exit Sub
 
 Err: '----------------------------
-    Call errHandler("reportResults")
+    Rtn = errHandler("reportResults", Err.Number)
+    If Rtn = 0 Then
+        Resume Next
+    Else
+        Call exitProgram
+    End If
 
 End Sub
 
