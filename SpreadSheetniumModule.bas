@@ -22,7 +22,7 @@ Private Sub Auto_Open()
     testTargetSheet.Activate
     
     If Range("AutoRun").Text = "Yes" Then
-        If MessageBoxTimeoutA(0&, "Batch script will be started in 5 seconds." & vbCrLf & "Please CANCEL if you stop batch script.", "Answer within 5 seconds!", vbMsgBoxSetForeground + vbQuestion + vbOKCancel + vbDefaultButton2, 0, 5000) = vbCancel Then
+        If MessageBoxTimeoutA(0&, "Batch script will be started automatically in 10 seconds." & vbCrLf & "Please CANCEL if you stop batch script.", "Answer within 10 seconds!", vbMsgBoxSetForeground + vbQuestion + vbOKCancel + vbDefaultButton2, 0, 10000) = vbCancel Then
             Exit Sub
         Else
             Call batchRunScript
@@ -46,13 +46,15 @@ Private Function errHandler(procName As String)
             "Err number: " & Err.Number & vbCrLf & _
             Err.Description
     
-    Debug.Print errMsg
-'    If ActiveSheet.TextBoxes(1).Text = "" Then
-'        ActiveSheet.TextBoxes(1).Text = errMsg
-'    End If
+    #If DBG = 0 Then
+        Debug.Print errMsg & vbCrLf & vbCrLf
+    #End If
+    'ActiveSheet.TextBoxes(1).Text = ActiveSheet.TextBoxes(1).Text & vbCrLf & vbCrLf & errMsg
+    Cells(9, 12).Value = Cells(9, 12).Value & errMsg & vbCrLf & vbCrLf
 
-ActiveSheet.TextBoxes(1).Text = ActiveSheet.TextBoxes(1).Text & vbCrLf & vbCrLf & errMsg
-'    Call exitProgram
+    #If DBG = 0 Then
+        Call exitProgram
+    #End If
 
 End Function
 Public Sub runTestScriptConfirm()
@@ -66,7 +68,12 @@ Public Sub runTestScriptConfirm()
     Else
         Call runScript
     End If
-    
+
+    If Range("ReportResults").Text = "Yes" Then
+        'report for each script
+        Call reportResults
+    End If
+
     Exit Sub
 
 Err: '----------------------------
@@ -89,7 +96,8 @@ Private Sub runScript()
     #End If
     
     Application.StatusBar = "Initializing."
-    ActiveSheet.TextBoxes(1).Text = ""
+    'ActiveSheet.TextBoxes(1).Text = ""
+    Cells(9, 12).Value = ""
     Call clearTestResults
     
     '==========================================
@@ -561,7 +569,8 @@ Private Sub clearTestResults()
         DoEvents
     Next R
     
-    ActiveSheet.TextBoxes(1).Text = ""
+    'ActiveSheet.TextBoxes(1).Text = ""
+    Cells(9, 12).Value = ""
     Application.StatusBar = "Ready to run."
 
     Exit Sub
@@ -659,6 +668,7 @@ Public Sub batchRunTestScriptConfirm()
         Exit Sub
     End If
     
+    Cells(9, 12).Value = ""
     Call batchRunScript
 
     Exit Sub
@@ -747,17 +757,30 @@ Public Sub reportResults()
     testResults = testResults & "Test title : " & Range("testTitle").Text & vbCrLf
     testResults = testResults & "sheet name : " & ActiveSheet.Name & vbCrLf & vbCrLf
     
+    testResults = testResults & "Browser : " & Range("targetBrowser").Text & vbCrLf
+    testResults = testResults & "baseurl : " & Range("baseURL").Text & vbCrLf
+    testResults = testResults & "window Width : " & Range("windowSizeW").Text & vbCrLf
+    testResults = testResults & "window Height : " & Range("windowSizeH").Text & vbCrLf
+    testResults = testResults & "ScreenShot : " & Range("ScreenshotPath").Text & vbCrLf & vbCrLf
+    
+    testResults = testResults & "/**************************/" & vbCrLf
     testResults = testResults & "Not tested : " & Range("NotTested").Text & vbCrLf
     testResults = testResults & "Passed : " & Range("Passed").Text & vbCrLf
     testResults = testResults & "Failed: " & Range("Failed").Text & vbCrLf
     testResults = testResults & "Skipped : " & Range("Skipped").Text & vbCrLf
     testResults = testResults & "Total : " & Range("Total").Text & vbCrLf
-    testResults = testResults & "Progress rate : " & Range("Progressrate").Text & vbCrLf & vbCrLf
+    testResults = testResults & "Progress rate : " & Range("Progressrate").Text & vbCrLf
+    testResults = testResults & "/**************************/" & vbCrLf & vbCrLf
     
-    testResults = testResults & ActiveSheet.TextBoxes(1).Text & vbCrLf & vbCrLf
+    
+    'testResults = testResults & ActiveSheet.TextBoxes(1).Text & vbCrLf & vbCrLf
+    testResults = testResults & Cells(9, 12).Value & vbCrLf & vbCrLf
     
     testResults = testResults & "https://ssugiya.github.io/Spreadsheetnium/" & vbCrLf
-    Debug.Print testResults
+    
+    #If DBG = 0 Then
+        Debug.Print testResults
+    #End If
     
     'activate report sheet
     Set testTargetSheet = Worksheets("REPORT_RESULTS")
@@ -777,4 +800,5 @@ Err: '----------------------------
     Call errHandler("reportResults")
 
 End Sub
+
 
