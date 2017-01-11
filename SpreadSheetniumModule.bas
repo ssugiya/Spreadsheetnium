@@ -6,7 +6,7 @@ Option Explicit
 Private Declare Function MessageBoxTimeoutA Lib "user32" (ByVal hWnd As Long, ByVal lpText As String, ByVal lpCaption As String, ByVal uType As Long, ByVal wLanguageId As Long, ByVal dwMilliseconds As Long) As Long
 Public driver As New WebDriver
 Public Verify As New Selenium.Verify
-Public Const findElementTimeOut As Long = 0 '3000
+Public Const findElementTimeOut As Long = 3000
 Public Const passedColorCode As Long = 11854022 'RGB(198, 224, 180)
 Public Const failedColorCode As Long = 11389944 'RGB(248, 203, 173)
 Public Rtn
@@ -23,6 +23,9 @@ Private Sub Auto_Open()
     Set testTargetSheet = Worksheets("BATCH")
     testTargetSheet.Activate
     
+    '==========================================
+    'Display auto start dialog
+    '==========================================
     If Range("AutoRun").Text = "Yes" Then
         If MessageBoxTimeoutA(0&, "Batch script will be started automatically in 10 seconds." & vbCrLf & "Please CANCEL if you stop batch script.", "Answer within 10 seconds!", vbMsgBoxSetForeground + vbQuestion + vbOKCancel + vbDefaultButton2, 0, 10000) = vbCancel Then
             Exit Sub
@@ -50,9 +53,11 @@ Private Function errHandler(procName As String, ErrNumber As Long)
     Dim errMsg As String
     
     Select Case ErrNumber
+'        Case 7 'no such element(Resume Next)
+'            errHandler = 0
         Case 26 'unexpected alert open(Resume Next)
             errHandler = 0
-        Case -2146233078 'ソースが見つかりませんでしたが､いくつかまたはすべてのログを検索できませんでした｡アクセス不可能なログ:   Security
+        Case -2146233078 'Error of Alert with PhantomJS. We can ignore this.
             errHandler = 0
         Case Else
             errHandler = -1
@@ -60,11 +65,13 @@ Private Function errHandler(procName As String, ErrNumber As Long)
                     "Procedure: " & procName & vbCrLf & _
                     "Err number: " & Err.Number & vbCrLf & _
                     Err.Description
-        
         #If DBG <> 0 Then
             Debug.Print errMsg & vbCrLf & vbCrLf
         #End If
         Cells(9, 12).Value = Cells(9, 12).Value & errMsg & vbCrLf & vbCrLf
+
+'todo
+'input error message to each cell if R is not null
 
     End Select
    
@@ -82,8 +89,10 @@ Public Sub runTestScriptConfirm()
         Call runScript
     End If
 
+    '==========================================
+    'report for each scripts
+    '==========================================
     If Range("ReportResults").Text = "Yes" Then
-        'report for each script
         Call reportResults
     End If
 
@@ -113,9 +122,9 @@ Private Sub runScript()
         On Error GoTo Err
     #End If
     
-    Application.StatusBar = "Initializing."
     Cells(9, 12).Value = ""
     Call clearTestResults
+    Application.StatusBar = "Initializing."
     
     '==========================================
     'Initial settings
@@ -126,9 +135,6 @@ Private Sub runScript()
     windowSizeH = Range("windowSizeH").Text
     screenshotPath = Range("ScreenshotPath").Text
     
-    '==========================================
-    'Start test
-    '==========================================
     driver.Start targetBrowser, baseURL
     driver.Window.SetSize windowSizeW, windowSizeH
     
@@ -136,7 +142,9 @@ Private Sub runScript()
         driver.Manage.DeleteAllCookies
     End If
     
-    'Loop test cases
+    '==========================================
+    'Loop test scripts
+    '==========================================
     Set LS = ActiveSheet.ListObjects(1)
     For Each R In LS.ListRows
         
@@ -147,7 +155,6 @@ Private Sub runScript()
             GoTo nextRowNum
         End If
         
-        'get palameters from excel sheet
         command = R.Range(LS.ListColumns("command").Index)
         findMethod = R.Range(LS.ListColumns("FindMethod").Index)
         actionTarget = R.Range(LS.ListColumns("ActionTarget").Index)
@@ -219,17 +226,27 @@ Private Sub runScript()
                     Case "Id"
                         If driver.IsElementPresent(by.ID(verificationTarget)) Then
                             R.Range(LS.ListColumns("ActualResult").Index) = driver.FindElementById(verificationTarget).Text
+                        Else
+                            R.Range(LS.ListColumns("ErrorMessage").Index) = "Verification skipped(No such element)"
                         End If
                     Case "Css"
                         If driver.IsElementPresent(by.Css(verificationTarget)) Then
                             R.Range(LS.ListColumns("ActualResult").Index) = driver.FindElementByCss(verificationTarget).Text
                         Else
-                            R.Range(LS.ListColumns("ErrorMessage").Index) = "Verification skipped(No element)"
+                            R.Range(LS.ListColumns("ErrorMessage").Index) = "Verification skipped(No such element)"
                         End If
                     Case "Name"
-                        R.Range(LS.ListColumns("ActualResult").Index) = driver.FindElementByName(verificationTarget).Text
+                        If driver.IsElementPresent(by.Name(verificationTarget)) Then
+                            R.Range(LS.ListColumns("ActualResult").Index) = driver.FindElementByName(verificationTarget).Text
+                        Else
+                            R.Range(LS.ListColumns("ErrorMessage").Index) = "Verification skipped(No such element)"
+                        End If
                     Case "XPath"
-                        R.Range(LS.ListColumns("ActualResult").Index) = driver.FindElementByXPath(verificationTarget).Text
+                        If driver.IsElementPresent(by.XPath(verificationTarget)) Then
+                            R.Range(LS.ListColumns("ActualResult").Index) = driver.FindElementByXPath(verificationTarget).Text
+                        Else
+                            R.Range(LS.ListColumns("ErrorMessage").Index) = "Verification skipped(No such element)"
+                        End If
                     Case Else
                         Call skipTest(R, LS, "Skipped (No verification method)")
                         GoTo nextRowNum
@@ -301,6 +318,10 @@ Rtn = errHandler("runScript", Err.Number)
 If Rtn = 0 Then
     Resume Next
 Else
+    
+'todo
+    Application.StatusBar = "Test script finished with unexpected error."
+    Cells(9, 12).Value = Cells(9, 12).Value & "Test script finished with unexpected error." & vbCrLf & vbCrLf
     Call exitProgram
 End If
     
@@ -645,7 +666,6 @@ Private Sub clearTestResults()
         DoEvents
     Next R
     
-    'ActiveSheet.TextBoxes(1).Text = ""
     Cells(9, 12).Value = ""
     Application.StatusBar = "Ready to run."
 
@@ -722,10 +742,11 @@ Public Sub prepTestTarget()
     
     For i = 1 To Sheets.Count
         Select Case Sheets(Sheets(i).Name).Name
+            'ignore this sheet
             Case "BATCH", "LISTBOX_DATA", "UPDATES", "REPORT_RESULTS"
-                'ignore this sheet
+            
+            'copy sheet name to listobject
             Case Else
-                'copy sheet name to listobject
                 Cells(rowNum, LS.ListColumns("run target").Index) = "Yes"
                 Cells(rowNum, LS.ListColumns("Status").Index) = "Ready to run"
                 rowNum = rowNum + 1
@@ -805,7 +826,9 @@ Private Sub batchRunScript()
         Call runScript
         
         If Range("ReportResults").Text = "Yes" Then
-            'report for each script
+            '==========================================
+            'report for each scripts
+            '==========================================
             Call reportResults
         End If
         
@@ -823,7 +846,9 @@ nextR:
     Call collectTestResults
     
     If Range("ReportResults").Text = "Yes" Then
-        'report for batch script
+        '==========================================
+        'report for batch script itself
+        '==========================================
         Call reportResults
     End If
 
