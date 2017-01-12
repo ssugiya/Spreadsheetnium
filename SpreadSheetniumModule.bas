@@ -11,7 +11,6 @@ Public Const passedColorCode As Long = 11854022 'RGB(198, 224, 180)
 Public Const failedColorCode As Long = 11389944 'RGB(248, 203, 173)
 Public Rtn
 
-
 Private Sub Auto_Open()
 
     Dim testTargetSheet  As Worksheet
@@ -92,7 +91,7 @@ Public Sub runTestScriptConfirm()
     '==========================================
     'report for each scripts
     '==========================================
-    If Range("ReportResults").Text = "Yes" Then
+    If LCase(Range("ReportResults").Text) = "yes" Then
         Call reportResults
     End If
 
@@ -163,38 +162,38 @@ Private Sub runScript()
     '==========================================
     'Run selenium action by command
     '==========================================
-        Select Case command
-            Case "Get"
+        Select Case LCase(command)
+            Case "get"
                 driver.Get actionTarget
-            Case "Click"
+            Case "click"
                 Rtn = commandClick(findMethod, actionTarget, R, LS)
                 If Rtn = -1 Then: GoTo nextRowNum
-            Case "SendKeys"
+            Case "sendkeys"
                 Rtn = commandSendKeys(findMethod, actionTarget, actionValue, R, LS)
                 If Rtn = -1 Then: GoTo nextRowNum
-            Case "TakeScreenshot"
+            Case "takescreenshot"
                 driver.TakeScreenshot.SaveAs actionTarget & "\" & actionValue
-            Case "Wait"
+            Case "wait"
                 driver.Wait actionValue
-            Case "GoBack"
+            Case "goback"
                 driver.GoBack
                 driver.Wait findElementTimeOut
-            Case "Select"
+            Case "select"
                 Rtn = commandSelect(findMethod, actionTarget, actionValue, R, LS)
                 If Rtn = -1 Then: GoTo nextRowNum
-            Case "Radio"
+            Case "radio"
                 Rtn = commandRadio(findMethod, actionTarget, actionValue, R, LS)
                 If Rtn = -1 Then: GoTo nextRowNum
-            Case "MouseMoveTo"
+            Case "mousemoveto"
                 Rtn = commandMouseMoveTo(findMethod, actionTarget, R, LS)
                 If Rtn = -1 Then: GoTo nextRowNum
-            Case "Submit"
+            Case "submit"
                 Rtn = commandSubmit(findMethod, actionTarget, R, LS)
                 If Rtn = -1 Then: GoTo nextRowNum
-            Case "Alert"
+            Case "alert"
                 Rtn = commandAlert(findMethod, actionTarget, actionValue, R, LS)
                 If Rtn = -1 Then: GoTo nextRowNum
-            Case "SwitchToWindow"
+            Case "switchtowindow"
                 driver.SwitchToWindowByTitle(actionTarget).Activate
                 driver.Wait findElementTimeOut
             Case Else
@@ -216,32 +215,32 @@ Private Sub runScript()
         End If
         
         'get actual results
-        Select Case verificationCommand
-            Case "Title"
+        Select Case LCase(verificationCommand)
+            Case "title"
                 R.Range(LS.ListColumns("ActualResult").Index) = driver.Title
-            Case "Url"
+            Case "url"
                 R.Range(LS.ListColumns("ActualResult").Index) = driver.Url
-            Case "Contains", "Equals", "Matches"
-                Select Case verificationMethod
-                    Case "Id"
+            Case "contains", "equals", "matches"
+                Select Case LCase(verificationMethod)
+                    Case "id"
                         If driver.IsElementPresent(by.ID(verificationTarget)) Then
                             R.Range(LS.ListColumns("ActualResult").Index) = driver.FindElementById(verificationTarget).Text
                         Else
                             R.Range(LS.ListColumns("ErrorMessage").Index) = "Verification skipped(No such element)"
                         End If
-                    Case "Css"
+                    Case "css"
                         If driver.IsElementPresent(by.Css(verificationTarget)) Then
                             R.Range(LS.ListColumns("ActualResult").Index) = driver.FindElementByCss(verificationTarget).Text
                         Else
                             R.Range(LS.ListColumns("ErrorMessage").Index) = "Verification skipped(No such element)"
                         End If
-                    Case "Name"
+                    Case "name"
                         If driver.IsElementPresent(by.Name(verificationTarget)) Then
                             R.Range(LS.ListColumns("ActualResult").Index) = driver.FindElementByName(verificationTarget).Text
                         Else
                             R.Range(LS.ListColumns("ErrorMessage").Index) = "Verification skipped(No such element)"
                         End If
-                    Case "XPath"
+                    Case "xpath"
                         If driver.IsElementPresent(by.XPath(verificationTarget)) Then
                             R.Range(LS.ListColumns("ActualResult").Index) = driver.FindElementByXPath(verificationTarget).Text
                         Else
@@ -257,12 +256,12 @@ Private Sub runScript()
         End Select
         
         'verify results
-        Select Case verificationCommand
-            Case "Contains"
+        Select Case LCase(verificationCommand)
+            Case "contains"
                 Rtn = Verify.Contains(R.Range(LS.ListColumns("ExpectedResult").Index).Text, R.Range(LS.ListColumns("ActualResult").Index).Text)
-            Case "Equals"
+            Case "equals"
                 Rtn = Verify.Equals(R.Range(LS.ListColumns("ExpectedResult").Index).Text, R.Range(LS.ListColumns("ActualResult").Index).Text)
-            Case "Matches" 'regular expression
+            Case "matches" 'regular expression
                 Rtn = Verify.Matches(R.Range(LS.ListColumns("ExpectedResult").Index).Text, R.Range(LS.ListColumns("ActualResult").Index).Text)
         End Select
     
@@ -377,20 +376,20 @@ Private Function commandClick(findMethod, actionTarget As String, R As ListRow, 
         On Error GoTo Err
     #End If
     
-    Select Case findMethod
-        Case "Id"
+    Select Case LCase(findMethod)
+        Case "id"
             #If DBG = 1 Then
                 Dim by As New by
                 Debug.Print driver.IsElementPresent(by.ID(actionTarget))
             #End If
             driver.FindElementById(actionTarget, findElementTimeOut).Click
-        Case "LinkText"
+        Case "linktext"
             driver.FindElementByLinkText(actionTarget, findElementTimeOut).Click
-        Case "Name"
+        Case "name"
             driver.FindElementByName(actionTarget, findElementTimeOut).Click
-        Case "XPath"
+        Case "xpath"
             driver.FindElementByXPath(actionTarget, findElementTimeOut).Click
-        Case "Css"
+        Case "css"
             driver.FindElementByCss(actionTarget, findElementTimeOut).Click
         Case Else
             Call skipTest(R, LS, "Skipped (No find method)")
@@ -416,16 +415,16 @@ Private Function commandSubmit(findMethod, actionTarget As String, R As ListRow,
         On Error GoTo Err
     #End If
         
-    Select Case findMethod
-        Case "Id"
+    Select Case LCase(findMethod)
+        Case "id"
             driver.FindElementById(actionTarget).Submit
-        Case "Link"
+        Case "link"
             driver.FindElementByLinkText(actionTarget).Submit
-        Case "Name"
+        Case "name"
             driver.FindElementByName(actionTarget).Submit
-        Case "XPath"
+        Case "xpath"
             driver.FindElementByXPath(actionTarget).Submit
-        Case "Css"
+        Case "css"
             driver.FindElementByCss(actionTarget).Submit
         Case Else
             Call skipTest(R, LS, "Skipped (No find method)")
@@ -451,25 +450,25 @@ Private Function commandSendKeys(findMethod As String, actionTarget As String, a
         On Error GoTo Err
     #End If
 
-    Select Case findMethod
-      Case "Id"
+    Select Case LCase(findMethod)
+      Case "id"
           With driver.FindElementById(actionTarget)
               .Clear
               .SendKeys actionValue
           End With
-      Case "Name"
+      Case "name"
           With driver.FindElementByName(actionTarget)
               .Clear
               .SendKeys actionValue
           End With
-      Case "XPath"
+      Case "xpath"
           With driver.FindElementByXPath(actionTarget)
               .Clear
               .SendKeys actionValue
           End With
-      Case "Css"
+      Case "css"
           With driver.FindElementByCss(actionTarget)
-              .Clear
+'              .Clear
               .SendKeys actionValue
           End With
       Case Else
@@ -486,6 +485,7 @@ Private Function commandSendKeys(findMethod As String, actionTarget As String, a
 Err: '----------------------------
     Rtn = errHandler("commandSendKeys", Err.Number)
     If Rtn = 0 Then
+        commandSendKeys = -1 'todo
         Resume Next
     Else
         Call exitProgram
@@ -499,14 +499,14 @@ Private Function commandSelect(findMethod As String, actionTarget As String, act
         On Error GoTo Err
     #End If
 
-    Select Case findMethod
-        Case "Id"
+    Select Case LCase(findMethod)
+        Case "id"
             driver.FindElementById(actionTarget).AsSelect.SelectByText actionValue
-        Case "Name"
+        Case "name"
             driver.FindElementByName(actionTarget).AsSelect.SelectByText actionValue
-        Case "XPath"
+        Case "xpath"
             driver.FindElementByXPath(actionTarget).AsSelect.SelectByText actionValue
-        Case "Css"
+        Case "css"
             driver.FindElementByCss(actionTarget).AsSelect.SelectByText actionValue
         Case Else
             Call skipTest(R, LS, "Skipped (No find method)")
@@ -531,14 +531,14 @@ Private Function commandRadio(findMethod As String, actionTarget As String, acti
         On Error GoTo Err
     #End If
     
-    Select Case findMethod
-        Case "Id"
+    Select Case LCase(findMethod)
+        Case "id"
             driver.FindElementById(actionTarget).Click
-        Case "Name"
+        Case "name"
             driver.FindElementsByName(actionTarget).Item(actionValue).Click
-        Case "XPath"
+        Case "xpath"
             driver.FindElementByXPath(actionTarget).Click
-        Case "Css"
+        Case "css"
             driver.FindElementByCss(actionTarget).Click
         Case Else
             Call skipTest(R, LS, "Skipped (No find method)")
@@ -563,12 +563,12 @@ Private Function commandAlert(findMethod As String, actionTarget As String, acti
         On Error GoTo Err
     #End If
 
-    Select Case actionTarget
-        Case "Accept"
+    Select Case LCase(actionTarget)
+        Case "accept"
             driver.SwitchToAlert.Accept
-        Case "Dismiss"
+        Case "dismiss"
             driver.SwitchToAlert.Dismiss
-        Case "SendKeys"
+        Case "sendkeys"
             driver.SwitchToAlert.SendKeys actionValue
         Case Else
             Call skipTest(R, LS, "Skipped (No find method)")
@@ -595,14 +595,14 @@ Private Function commandMouseMoveTo(findMethod As String, actionTarget As String
         On Error GoTo Err
     #End If
     
-    Select Case findMethod
-        Case "Id"
+    Select Case LCase(findMethod)
+        Case "id"
            Set elm = driver.FindElementById(actionTarget)
-        Case "Name"
+        Case "name"
            Set elm = driver.FindElementByName(actionTarget)
-        Case "XPath"
+        Case "xpath"
            Set elm = driver.FindElementByXPath(actionTarget)
-        Case "Css"
+        Case "css"
            Set elm = driver.FindElementByCss(actionTarget)
         Case Else
             Call skipTest(R, LS, "Skipped (No find method)")
@@ -825,7 +825,7 @@ Private Sub batchRunScript()
         
         Call runScript
         
-        If Range("ReportResults").Text = "Yes" Then
+        If LCase(Range("ReportResults").Text) = "yes" Then
             '==========================================
             'report for each scripts
             '==========================================
@@ -898,8 +898,6 @@ Public Sub reportResults()
     testResults = testResults & "Progress rate : " & Range("Progressrate").Text & vbCrLf
     testResults = testResults & "/**************************/" & vbCrLf & vbCrLf
     
-    
-    'testResults = testResults & ActiveSheet.TextBoxes(1).Text & vbCrLf & vbCrLf
     testResults = testResults & Cells(9, 12).Value & vbCrLf & vbCrLf
     
     testResults = testResults & "https://ssugiya.github.io/Spreadsheetnium/" & vbCrLf

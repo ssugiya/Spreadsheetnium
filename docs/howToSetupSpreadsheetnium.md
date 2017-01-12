@@ -25,8 +25,7 @@
 
 ### 4. Install Google Chrome extension (just recommend)
 
-#### WebDriver Scripting Assistant
-[https://chrome.google.com/webstore/detail/webdriver-scripting-assis/defeagjagbpfggackgppbadbafdfbjfo](https://chrome.google.com/webstore/detail/webdriver-scripting-assis/defeagjagbpfggackgppbadbafdfbjfo)
+[WebDriver Scripting Assistant](https://chrome.google.com/webstore/detail/webdriver-scripting-assis/defeagjagbpfggackgppbadbafdfbjfo) or [Copy Css Selector](https://chrome.google.com/webstore/detail/copy-css-selector/kemkenbgbgodoglfkkejbdcpojnodnkg)
 
 You can copy CSS SELECTOR to clipboard easily by right-click on the target element of HTML.
 
