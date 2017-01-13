@@ -196,8 +196,12 @@ Private Sub runScript()
             Case "switchtowindow"
                 driver.SwitchToWindowByTitle(actionTarget).Activate
                 driver.Wait findElementTimeOut
+            Case "switchtoframe"
+                driver.SwitchToFrame (actionTarget)
+                driver.Wait findElementTimeOut
             Case Else
-        
+                Call skipTest(R, LS, "Skipped (No such action command)")
+                GoTo nextRowNum
         End Select
         
         
@@ -210,7 +214,7 @@ Private Sub runScript()
         Rtn = ""
         
         If verificationCommand = "" Then
-            Call skipTest(R, LS, "Skipped (No verification command)")
+            Call skipTest(R, LS, "Skipped (No such verification command)")
             GoTo nextRowNum
         End If
         
@@ -929,5 +933,7 @@ Err: '----------------------------
     End If
 
 End Sub
+
+
 
 
