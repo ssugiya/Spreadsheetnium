@@ -10,6 +10,7 @@ Public Const findElementTimeOut As Long = 3000
 Public Const passedColorCode As Long = 11854022 'RGB(198, 224, 180)
 Public Const failedColorCode As Long = 11389944 'RGB(248, 203, 173)
 Public Rtn
+Public rowNum As Long
 
 Private Sub Auto_Open()
 
@@ -50,6 +51,10 @@ End Sub
 Private Function errHandler(procName As String, ErrNumber As Long)
 
     Dim errMsg As String
+    Dim LS As ListObject
+    Dim R As ListRow
+
+    Set LS = ActiveSheet.ListObjects(1)
     
     Select Case ErrNumber
 '        Case 7 'no such element(Resume Next)
@@ -58,26 +63,36 @@ Private Function errHandler(procName As String, ErrNumber As Long)
             errHandler = 0
         Case -2146233078 'Error of Alert with PhantomJS. We can ignore this.
             errHandler = 0
+        Case 57 ' BrowserNotStartedError
+            errHandler = 0
+'        Case 13 'unknown error
+'            errHandler = 0
         Case Else
             errHandler = -1
             errMsg = Now() & vbCrLf & _
                     "Procedure: " & procName & vbCrLf & _
                     "Err number: " & Err.Number & vbCrLf & _
                     Err.Description
-        #If DBG <> 0 Then
-            Debug.Print errMsg & vbCrLf & vbCrLf
-        #End If
-        Cells(9, 12).Value = Cells(9, 12).Value & errMsg & vbCrLf & vbCrLf
-
-'todo
-'input error message to each cell if R is not null
-
+            #If DBG <> 0 Then
+                Debug.Print errMsg & vbCrLf & vbCrLf
+            #End If
+    
+            'output error message
+            If rowNum > 1 Then
+                LS.ListRows(rowNum).Range(LS.ListColumns("ErrorMessage").Index) = errMsg
+            End If
+            Cells(9, 12).Value = Cells(9, 12).Value & errMsg & vbCrLf & vbCrLf
+        
+            Application.StatusBar = "Test script finished with unexpected error."
+'            Cells(9, 12).Value = Cells(9, 12).Value & "Test script finished with unexpected error." & vbCrLf & vbCrLf
+        
     End Select
    
-
 End Function
 Public Sub runTestScriptConfirm()
 
+    Dim R As ListRow
+    
     #If DBG = 0 Then
         On Error GoTo Err
     #End If
@@ -121,6 +136,8 @@ Private Sub runScript()
         On Error GoTo Err
     #End If
     
+    rowNum = 0
+    
     Cells(9, 12).Value = ""
     Call clearTestResults
     Application.StatusBar = "Initializing."
@@ -148,6 +165,7 @@ Private Sub runScript()
     For Each R In LS.ListRows
         
         Application.StatusBar = "Test script is running...  " & R.Index & "/" & LS.ListRows.Count
+        rowNum = R.Index
         
         If LCase(R.Range(LS.ListColumns("runTarget").Index)) <> "yes" Then
             Call skipTest(R, LS, "Skipped (run-target does not Yes)")
@@ -321,10 +339,6 @@ Rtn = errHandler("runScript", Err.Number)
 If Rtn = 0 Then
     Resume Next
 Else
-    
-'todo
-    Application.StatusBar = "Test script finished with unexpected error."
-    Cells(9, 12).Value = Cells(9, 12).Value & "Test script finished with unexpected error." & vbCrLf & vbCrLf
     Call exitProgram
 End If
     
@@ -359,6 +373,8 @@ Private Sub exitProgram()
         On Error GoTo Err
     #End If
     
+'    Application.StatusBar = "Test script finished with unexpected error."
+'    Cells(9, 12).Value = Cells(9, 12).Value & "Test script finished with unexpected error." & vbCrLf & vbCrLf
     driver.Quit
     ActiveWorkbook.Save
     
@@ -408,6 +424,7 @@ Err: '----------------------------
     If Rtn = 0 Then
         Resume Next
     Else
+'        commandClick = -1
         Call exitProgram
     End If
 
@@ -434,6 +451,7 @@ Private Function commandSubmit(findMethod, actionTarget As String, R As ListRow,
             Call skipTest(R, LS, "Skipped (No find method)")
             commandSubmit = -1
     End Select
+    
     driver.Wait findElementTimeOut
     
     Exit Function
@@ -472,7 +490,7 @@ Private Function commandSendKeys(findMethod As String, actionTarget As String, a
           End With
       Case "css"
           With driver.FindElementByCss(actionTarget)
-'              .Clear
+              .Clear
               .SendKeys actionValue
           End With
       Case Else
@@ -489,7 +507,6 @@ Private Function commandSendKeys(findMethod As String, actionTarget As String, a
 Err: '----------------------------
     Rtn = errHandler("commandSendKeys", Err.Number)
     If Rtn = 0 Then
-        commandSendKeys = -1 'todo
         Resume Next
     Else
         Call exitProgram
@@ -665,7 +682,7 @@ Private Sub clearTestResults()
         Application.StatusBar = "Test results is initializing..." & R.Index & " / " & LS.ListRows.Count
         Call skipTest(R, LS, "")
         R.Range(LS.ListColumns("ErrorMessage").Index) = ""
-        R.Range(LS.ListColumns("Memo").Index) = ""
+'        R.Range(LS.ListColumns("Memo").Index) = ""
         DoEvents
         DoEvents
     Next R

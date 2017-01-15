@@ -74,6 +74,8 @@ Spreadsheetniumを未Downloadな場合は、以下を参照してください。
     - 写真名は、[scriptID]\_[HTML Title]\_[Description]\_[Result].pngで保存されます
 - Delete cookie
     - 試験開始時にCookieを削除する場合は[Yes]にします
+- Report Results
+	- a
 
 #### Write test script
 
