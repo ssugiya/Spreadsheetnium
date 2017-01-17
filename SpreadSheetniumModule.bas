@@ -69,16 +69,15 @@ Private Function errHandler(procName As String, ErrNumber As Long)
 '            errHandler = 0
         Case Else
             errHandler = -1
+            
             errMsg = Now() & vbCrLf & _
                     "Procedure: " & procName & vbCrLf & _
                     "Err number: " & Err.Number & vbCrLf & _
                     Err.Description
-            #If DBG <> 0 Then
-                Debug.Print errMsg & vbCrLf & vbCrLf
-            #End If
     
             'output error message
             If rowNum > 1 Then
+                errMsg = errMsg & vbCrLf & "scriptID: " & LS.ListRows(rowNum).Range(LS.ListColumns("scriptID").Index)
                 LS.ListRows(rowNum).Range(LS.ListColumns("ErrorMessage").Index) = errMsg
             End If
             Cells(9, 12).Value = Cells(9, 12).Value & errMsg & vbCrLf & vbCrLf
@@ -86,6 +85,10 @@ Private Function errHandler(procName As String, ErrNumber As Long)
             Application.StatusBar = "Test script finished with unexpected error."
 '            Cells(9, 12).Value = Cells(9, 12).Value & "Test script finished with unexpected error." & vbCrLf & vbCrLf
         
+            #If DBG <> 0 Then
+                Debug.Print errMsg & vbCrLf & vbCrLf
+            #End If
+    
     End Select
    
 End Function
@@ -164,7 +167,8 @@ Private Sub runScript()
     Set LS = ActiveSheet.ListObjects(1)
     For Each R In LS.ListRows
         
-        Application.StatusBar = "Test script is running...  " & R.Index & "/" & LS.ListRows.Count
+'        Application.StatusBar = "Test script is running...  " & R.Index & "/" & LS.ListRows.Count
+        Application.StatusBar = "Running...  " & R.Index & "/" & LS.ListRows.Count
         rowNum = R.Index
         
         If LCase(R.Range(LS.ListColumns("runTarget").Index)) <> "yes" Then
