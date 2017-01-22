@@ -956,5 +956,86 @@ Err: '----------------------------
 End Sub
 
 
+Public Sub importScriptFromAnotherBook()
 
+    Dim Target_Workbook As Workbook
+    Dim Source_Workbook As Workbook
+    Dim Source_Path As String
+    Dim Source_Data As String
+    
+'template check
+    '"You did not have 'template' sheet. Please download latest Spreadsheetnium"
+    'open update sheet
+    
+'select target excelbook
+    Source_Path = "C:\git\GitHub\Spreadsheetnium\SpreadsheetniumXXX.xlsm"
+    Set Target_Workbook = ThisWorkbook
+    Set Source_Workbook = Workbooks.Open(Source_Path)
+    
+'loop each sheet
+    'check importable sheet
+        'ignore "BATCH", "sample_commandReference", "template", "UPDATES", "LISTBOX_DATA"
+            'next
+        'ELSE
+            'prep new sheet to copy my template
+            
+            
+            'import testscript from list object
+            Source_Data = Source_Workbook.Sheets("sample").Cells(1, 1)
+            Target_Workbook.Sheets("new").Cells(1, 1) = Source_Data
+            
+
+            'import settings
+
+            'import test title and description
+            
+
+'    Target_Workbook.Save
+    Source_Workbook.Close False
+    
+    
+'=========================================================================
+
+
+
+    
+        
+    
+    'copy cell to each target colomn
+
+        'runTarget
+        'Description
+        'scriptID
+        'Command
+        'FindMethod
+        'ActionTarget
+        'ActionValue
+        'VerificationCommand
+        'Verificationmethod
+        'VerificationTarget
+        'ExpectedResult
+        'ActualResult
+        'Result
+        'LastUpdate
+        'ErrorMessage
+        'Memo
+    
+    'copy settings
+
+        'targetBrowser
+        'baseURL
+        'windowSizeW
+        'windowSizeH
+        'ScreenshotPath
+        'DeleteCookie
+        'ReportResults
+        
+' loop end
+
+
+End Sub
+
+Public Sub importScriptFromJson()
+
+End Sub
 
