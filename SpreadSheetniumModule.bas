@@ -719,12 +719,14 @@ Private Sub collectTestResults()
     rowNum = Range("ResultsSummary").Row + 2
     
     For i = 1 To Sheets.Count
-        Select Case Sheets(Sheets(i).Name).Name
+'todo
+'        Select Case Sheets(i).Name
+        Select Case Sheets(i).Name
             Case "BATCH", "LISTBOX_DATA", "UPDATES", "REPORT_RESULTS"
             'ignore theese sheet
             Case Else
             'copy sheet name to listobject
-                Cells(rowNum, LS.ListColumns("SheetName").Index) = Sheets(Sheets(i).Name).Name
+                Cells(rowNum, LS.ListColumns("SheetName").Index) = Sheets(i).Name
                 Cells(rowNum, LS.ListColumns("Not Tested").Index) = Sheets(Sheets(i).Name).ListObjects(3).Range(2, 2).Text
                 Cells(rowNum, LS.ListColumns("Passed").Index) = Sheets(Sheets(i).Name).ListObjects(3).Range(3, 2).Text
                 Cells(rowNum, LS.ListColumns("Failed").Index) = Sheets(Sheets(i).Name).ListObjects(3).Range(4, 2).Text
@@ -766,7 +768,7 @@ Public Sub prepTestTarget()
     Next i
     
     For i = 1 To Sheets.Count
-        Select Case Sheets(Sheets(i).Name).Name
+        Select Case Sheets(i).Name
             'ignore this sheet
             Case "BATCH", "LISTBOX_DATA", "UPDATES", "REPORT_RESULTS"
             
@@ -956,40 +958,63 @@ Err: '----------------------------
 End Sub
 
 
-Public Sub importScriptFromAnotherBook()
+Public Sub exportScriptToAnotherBook()
 
     Dim Target_Workbook As Workbook
     Dim Source_Workbook As Workbook
     Dim Source_Path As String
     Dim Source_Data As String
+    Dim i As Long
+    Dim j As Long
+    Dim dupFlg As Boolean
     
-'template check
-    '"You did not have 'template' sheet. Please download latest Spreadsheetnium"
-    'open update sheet
     
-'select target excelbook
-    Source_Path = "C:\git\GitHub\Spreadsheetnium\SpreadsheetniumXXX.xlsm"
+    'select target excelbook
+'    Source_Path = Application.GetOpenFilename()
+    Source_Path = "C:\git\Spreadsheetnium\MyCloud_FWDBêÿë÷_ìÆçÏämîFì‡óeé©ìÆî≈.xlsm"
     Set Target_Workbook = ThisWorkbook
     Set Source_Workbook = Workbooks.Open(Source_Path)
     
-'loop each sheet
-    'check importable sheet
-        'ignore "BATCH", "sample_commandReference", "template", "UPDATES", "LISTBOX_DATA"
-            'next
-        'ELSE
-            'prep new sheet to copy my template
-            
-            
-            'import testscript from list object
-            Source_Data = Source_Workbook.Sheets("sample").Cells(1, 1)
-            Target_Workbook.Sheets("new").Cells(1, 1) = Source_Data
+'my template sheet check
+    '"You did not have 'template' sheet. Please download latest Spreadsheetnium"
+    'open update sheet
+    
+    
+    'loop each sheet
+    For i = 1 To Source_Workbook.Sheets.Count
+        dupFlg = False
+        'check importable sheet
+        Select Case Source_Workbook.Sheets(i).Name
+            Case "BATCH", "LISTBOX_DATA", "UPDATES", "sample_commandReference", "template"
+                'ignore
+            Case "REPORT_RESULTS"
+                'ignore
+            Case Else
+                'prep new sheet to copy my template
+                Target_Workbook.Worksheets("template").Copy After:=Target_Workbook.Worksheets("BATCH")
+                    For j = 1 To Target_Workbook.Sheets.Count
+                        If Target_Workbook.Sheets(j).Name = Source_Workbook.Sheets(i).Name Then dupFlg = True
+                    Next j
+                If dupFlg = True Then
+                    Target_Workbook.ActiveSheet.Name = Source_Workbook.Sheets(i).Name & "_" & Int(9998 * Rnd + 1)
+                Else
+                    Target_Workbook.ActiveSheet.Name = Source_Workbook.Sheets(i).Name
+                End If
+                
+                
+                
+                'import testscript from list object
             
 
             'import settings
 
             'import test title and description
+                Source_Data = Source_Workbook.Sheets(i).Cells(1, 1)
+                Target_Workbook.ActiveSheet.Cells(1, 1) = Source_Data
             
-
+            End Select
+    Next i
+    
 '    Target_Workbook.Save
     Source_Workbook.Close False
     
