@@ -16,6 +16,10 @@ Private Sub Auto_Open()
 
     Dim testTargetSheet  As Worksheet
     
+    Application.ScreenUpdating = True
+Application.EnableEvents = True 'イベント抑制
+Application.Calculation = xlCalculationAutomatic '手動計算
+    
     #If DBG = 0 Then
         On Error GoTo Err
     #End If
@@ -958,7 +962,7 @@ Err: '----------------------------
 End Sub
 
 
-Public Sub exportScriptToAnotherBook()
+Public Sub importScriptToAnotherBook()
 
     Dim Target_Workbook As Workbook
     Dim Source_Workbook As Workbook
@@ -966,19 +970,20 @@ Public Sub exportScriptToAnotherBook()
     Dim Source_Data As String
     Dim i As Long
     Dim j As Long
+    Dim k As Long
     Dim dupFlg As Boolean
-    
+    Dim TargetLS As ListObject
+    Dim SourceLS As ListObject
+    Dim targetColumn(0 To 15) As String
     
     'select target excelbook
-'    Source_Path = Application.GetOpenFilename()
-    Source_Path = "C:\git\Spreadsheetnium\MyCloud_FWDB切替_動作確認内容自動版.xlsm"
+    Source_Path = Application.GetOpenFilename()
     Set Target_Workbook = ThisWorkbook
     Set Source_Workbook = Workbooks.Open(Source_Path)
     
 'my template sheet check
     '"You did not have 'template' sheet. Please download latest Spreadsheetnium"
     'open update sheet
-    
     
     'loop each sheet
     For i = 1 To Source_Workbook.Sheets.Count
@@ -987,11 +992,13 @@ Public Sub exportScriptToAnotherBook()
         Select Case Source_Workbook.Sheets(i).Name
             Case "BATCH", "LISTBOX_DATA", "UPDATES", "sample_commandReference", "template"
                 'ignore
-            Case "REPORT_RESULTS"
+            
+            'Case "REPORT_RESULTS"
                 'ignore
+            
             Case Else
                 'prep new sheet to copy my template
-                Target_Workbook.Worksheets("template").Copy After:=Target_Workbook.Worksheets("BATCH")
+                Target_Workbook.Worksheets("template").Copy Before:=Target_Workbook.Worksheets("template")
                     For j = 1 To Target_Workbook.Sheets.Count
                         If Target_Workbook.Sheets(j).Name = Source_Workbook.Sheets(i).Name Then dupFlg = True
                     Next j
@@ -1001,66 +1008,51 @@ Public Sub exportScriptToAnotherBook()
                     Target_Workbook.ActiveSheet.Name = Source_Workbook.Sheets(i).Name
                 End If
                 
+                Set TargetLS = Target_Workbook.ActiveSheet.ListObjects(1)
+                Set SourceLS = Source_Workbook.Sheets(i).ListObjects(1)
                 
+                targetColumn(0) = "runTarget"
+                targetColumn(1) = "Description"
+                targetColumn(2) = "scriptID"
+                targetColumn(3) = "command"
+                targetColumn(4) = "findMethod"
+                targetColumn(5) = "actionTarget"
+                targetColumn(6) = "actionValue"
+                targetColumn(7) = "verificationCommand"
+                targetColumn(8) = "verificationMethod"
+                targetColumn(9) = "verificationTarget"
+                targetColumn(10) = "ExpectedResult"
+                targetColumn(11) = "ActualResult"
+                targetColumn(12) = "Result"
+                targetColumn(13) = "LastUpdate"
+                targetColumn(14) = "ErrorMessage"
+                targetColumn(15) = "Memo"
                 
-                'import testscript from list object
-            
-
-            'import settings
-
-            'import test title and description
-                Source_Data = Source_Workbook.Sheets(i).Cells(1, 1)
-                Target_Workbook.ActiveSheet.Cells(1, 1) = Source_Data
-            
+                For k = 0 To 15
+                    DoEvents
+                    SourceLS.ListColumns(targetColumn(k)).Range.Copy
+                    TargetLS.ListColumns(targetColumn(k)).Range.PasteSpecial Paste:=xlPasteValues
+                    Application.StatusBar = "copy " & Source_Workbook.Sheets(i).Name & "  " & TargetLS.ListColumns(targetColumn(k)).Name
+                Next k
             End Select
+    
+            'copy settings
+                'targetBrowser
+                'baseURL
+                'windowSizeW
+                'windowSizeH
+                'ScreenshotPath
+                'DeleteCookie
+                'ReportResults
+    
+            'copy Title and description
+            
     Next i
     
 '    Target_Workbook.Save
     Source_Workbook.Close False
-    
-    
-'=========================================================================
-
-
-
-    
-        
-    
-    'copy cell to each target colomn
-
-        'runTarget
-        'Description
-        'scriptID
-        'Command
-        'FindMethod
-        'ActionTarget
-        'ActionValue
-        'VerificationCommand
-        'Verificationmethod
-        'VerificationTarget
-        'ExpectedResult
-        'ActualResult
-        'Result
-        'LastUpdate
-        'ErrorMessage
-        'Memo
-    
-    'copy settings
-
-        'targetBrowser
-        'baseURL
-        'windowSizeW
-        'windowSizeH
-        'ScreenshotPath
-        'DeleteCookie
-        'ReportResults
-        
-' loop end
-
 
 End Sub
 
-Public Sub importScriptFromJson()
 
-End Sub
 
