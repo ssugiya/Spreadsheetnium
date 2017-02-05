@@ -1,7 +1,7 @@
 Attribute VB_Name = "SpreadSheetniumModule"
 Option Explicit
 
-#Const DBG = 0
+#Const DBG = 1
 
 Private Declare Function MessageBoxTimeoutA Lib "user32" (ByVal hWnd As Long, ByVal lpText As String, ByVal lpCaption As String, ByVal uType As Long, ByVal wLanguageId As Long, ByVal dwMilliseconds As Long) As Long
 Public driver As New WebDriver
@@ -17,8 +17,8 @@ Private Sub Auto_Open()
     Dim testTargetSheet  As Worksheet
     
     Application.ScreenUpdating = True
-Application.EnableEvents = True 'ÉCÉxÉìÉgó}êß
-Application.Calculation = xlCalculationAutomatic 'éËìÆåvéZ
+    Application.EnableEvents = True
+    Application.Calculation = xlCalculationAutomatic
     
     #If DBG = 0 Then
         On Error GoTo Err
@@ -87,7 +87,6 @@ Private Function errHandler(procName As String, ErrNumber As Long)
             Cells(9, 12).Value = Cells(9, 12).Value & errMsg & vbCrLf & vbCrLf
         
             Application.StatusBar = "Test script finished with unexpected error."
-'            Cells(9, 12).Value = Cells(9, 12).Value & "Test script finished with unexpected error." & vbCrLf & vbCrLf
         
             #If DBG <> 0 Then
                 Debug.Print errMsg & vbCrLf & vbCrLf
@@ -381,8 +380,6 @@ Private Sub exitProgram()
         On Error GoTo Err
     #End If
     
-'    Application.StatusBar = "Test script finished with unexpected error."
-'    Cells(9, 12).Value = Cells(9, 12).Value & "Test script finished with unexpected error." & vbCrLf & vbCrLf
     driver.Quit
     ActiveWorkbook.Save
     
@@ -432,7 +429,6 @@ Err: '----------------------------
     If Rtn = 0 Then
         Resume Next
     Else
-'        commandClick = -1
         Call exitProgram
     End If
 
@@ -723,13 +719,11 @@ Private Sub collectTestResults()
     rowNum = Range("ResultsSummary").Row + 2
     
     For i = 1 To Sheets.Count
-'todo
-'        Select Case Sheets(i).Name
         Select Case Sheets(i).Name
             Case "BATCH", "LISTBOX_DATA", "UPDATES", "REPORT_RESULTS"
-            'ignore theese sheet
+                'ignore theese sheet
             Case Else
-            'copy sheet name to listobject
+                'copy sheet name to listobject
                 Cells(rowNum, LS.ListColumns("SheetName").Index) = Sheets(i).Name
                 Cells(rowNum, LS.ListColumns("Not Tested").Index) = Sheets(Sheets(i).Name).ListObjects(3).Range(2, 2).Text
                 Cells(rowNum, LS.ListColumns("Passed").Index) = Sheets(Sheets(i).Name).ListObjects(3).Range(3, 2).Text
@@ -857,9 +851,7 @@ Private Sub batchRunScript()
         Call runScript
         
         If LCase(Range("ReportResults").Text) = "yes" Then
-            '==========================================
             'report for each scripts
-            '==========================================
             Call reportResults
         End If
         
@@ -877,9 +869,7 @@ nextR:
     Call collectTestResults
     
     If Range("ReportResults").Text = "Yes" Then
-        '==========================================
         'report for batch script itself
-        '==========================================
         Call reportResults
     End If
 
@@ -962,7 +952,7 @@ Err: '----------------------------
 End Sub
 
 
-Public Sub importScriptToAnotherBook()
+Public Sub importScript()
 
     Dim Target_Workbook As Workbook
     Dim Source_Workbook As Workbook
@@ -971,23 +961,44 @@ Public Sub importScriptToAnotherBook()
     Dim i As Long
     Dim j As Long
     Dim k As Long
-    Dim dupFlg As Boolean
+    Dim flag As Boolean
     Dim TargetLS As ListObject
     Dim SourceLS As ListObject
     Dim targetColumn(0 To 15) As String
+    Dim ws As Worksheet
+    
+    #If DBG = 0 Then
+        On Error GoTo Err
+    #End If
     
     'select target excelbook
     Source_Path = Application.GetOpenFilename()
     Set Target_Workbook = ThisWorkbook
+    If Source_Path = "False" Then Exit Sub
     Set Source_Workbook = Workbooks.Open(Source_Path)
     
-'my template sheet check
-    '"You did not have 'template' sheet. Please download latest Spreadsheetnium"
-    'open update sheet
+    If MsgBox("Do you want to import test script from " & Source_Workbook.Name & "?", vbOKCancel + vbExclamation + vbDefaultButton2, "Run test script") = vbCancel Then
+            Source_Workbook.Close False
+            Exit Sub
+    End If
+   
+    flag = False
+    For Each ws In Target_Workbook.Worksheets
+        If ws.Name = "template" Then
+            flag = True
+            Exit For
+        End If
+    Next ws
+    If flag = False Then
+        MsgBox "You did not have 'template' sheet. Please download latest Spreadsheetnium"
+        Source_Workbook.Close False
+        Exit Sub
+    End If
     
     'loop each sheet
+    Application.DisplayAlerts = False
     For i = 1 To Source_Workbook.Sheets.Count
-        dupFlg = False
+        flag = False
         'check importable sheet
         Select Case Source_Workbook.Sheets(i).Name
             Case "BATCH", "LISTBOX_DATA", "UPDATES", "sample_commandReference", "template"
@@ -1000,14 +1011,27 @@ Public Sub importScriptToAnotherBook()
                 'prep new sheet to copy my template
                 Target_Workbook.Worksheets("template").Copy Before:=Target_Workbook.Worksheets("template")
                     For j = 1 To Target_Workbook.Sheets.Count
-                        If Target_Workbook.Sheets(j).Name = Source_Workbook.Sheets(i).Name Then dupFlg = True
+                        If Target_Workbook.Sheets(j).Name = Source_Workbook.Sheets(i).Name Then flag = True
                     Next j
-                If dupFlg = True Then
+                If flag = True Then
                     Target_Workbook.ActiveSheet.Name = Source_Workbook.Sheets(i).Name & "_" & Int(9998 * Rnd + 1)
                 Else
                     Target_Workbook.ActiveSheet.Name = Source_Workbook.Sheets(i).Name
                 End If
                 
+            'copy Title and description
+                Source_Workbook.Sheets(i).Range("1:5").Copy Target_Workbook.ActiveSheet.Range("1:5")
+                
+            'copy settings
+                Target_Workbook.ActiveSheet.Range("targetBrowser") = Source_Workbook.Sheets(i).Range("targetBrowser").Text
+                Target_Workbook.ActiveSheet.Range("baseURL") = Source_Workbook.Sheets(i).Range("baseURL").Text
+                Target_Workbook.ActiveSheet.Range("windowSizeW") = Source_Workbook.Sheets(i).Range("windowSizeW").Text
+                Target_Workbook.ActiveSheet.Range("windowSizeH") = Source_Workbook.Sheets(i).Range("windowSizeH").Text
+                Target_Workbook.ActiveSheet.Range("ScreenshotPath") = Source_Workbook.Sheets(i).Range("ScreenshotPath").Text
+                Target_Workbook.ActiveSheet.Range("DeleteCookie") = Source_Workbook.Sheets(i).Range("DeleteCookie").Text
+                Target_Workbook.ActiveSheet.Range("ReportResults") = Source_Workbook.Sheets(i).Range("ReportResults").Text
+                
+                'copy script data
                 Set TargetLS = Target_Workbook.ActiveSheet.ListObjects(1)
                 Set SourceLS = Source_Workbook.Sheets(i).ListObjects(1)
                 
@@ -1034,25 +1058,32 @@ Public Sub importScriptToAnotherBook()
                     TargetLS.ListColumns(targetColumn(k)).Range.PasteSpecial Paste:=xlPasteValues
                     Application.StatusBar = "copy " & Source_Workbook.Sheets(i).Name & "  " & TargetLS.ListColumns(targetColumn(k)).Name
                 Next k
+            
+                Target_Workbook.ActiveSheet.Range("A1").Select
+            
             End Select
-    
-            'copy settings
-                'targetBrowser
-                'baseURL
-                'windowSizeW
-                'windowSizeH
-                'ScreenshotPath
-                'DeleteCookie
-                'ReportResults
-    
-            'copy Title and description
             
     Next i
+    Application.DisplayAlerts = True
+    Application.StatusBar = "import completed."
     
-'    Target_Workbook.Save
     Source_Workbook.Close False
 
+    Exit Sub
+
+Err: '----------------------------
+    Rtn = errHandler("reportResults", Err.Number)
+    If Rtn = 0 Then
+        Resume Next
+    Else
+        Call exitProgram
+    End If
+
 End Sub
+
+
+
+
 
 
 
