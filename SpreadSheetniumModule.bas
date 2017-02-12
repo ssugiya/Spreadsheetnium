@@ -1,7 +1,7 @@
 Attribute VB_Name = "SpreadSheetniumModule"
 Option Explicit
 
-#Const DBG = 1
+#Const DBG = 0
 
 Private Declare Function MessageBoxTimeoutA Lib "user32" (ByVal hWnd As Long, ByVal lpText As String, ByVal lpCaption As String, ByVal uType As Long, ByVal wLanguageId As Long, ByVal dwMilliseconds As Long) As Long
 Public driver As New WebDriver
