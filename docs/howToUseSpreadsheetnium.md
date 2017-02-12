@@ -65,7 +65,7 @@ Please download and setup Spreadsheetnium if you did not download Spreadsheetniu
 - Findmethod
     - Decide how you want to select the object you want to manipulate. We recommend choosing CSS.
 - actiontarget
-    - It is useful to use the google chrome plugin [WebDriver Scripting Assistant](https://chrome.google.com/webstore/detail/webdriver-scripting-assis/defeagjagbpfggackgppbadbafdfbjfo) or [Copy Css Selector](https://chrome.google.com/ Webstore / detail / copy-css-selector / kemkenbgbgodoglfkkejbdcpojnodnkg) as an auxiliary input. You can copy CSS SELECTOR to clipboard easily by right-click on the target element of HTML.
+    - It is useful to use the google chrome plugin [WebDriver Scripting Assistant](https://chrome.google.com/webstore/detail/webdriver-scripting-assis/defeagjagbpfggackgppbadbafdfbjfo) or [Copy Css Selector](https://chrome.google.com/webstore/detail/copy-css-selector/kemkenbgbgodoglfkkejbdcpojnodnkg) as an auxiliary input. You can copy CSS SELECTOR to clipboard easily by right-click on the target element of HTML.
 - actionvalue
 	- Input is required when specifying values with Sendkeys, Selectbox, etc. For details, please refer to [sample_commandReference].
 
